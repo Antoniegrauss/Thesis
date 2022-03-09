@@ -5,7 +5,7 @@ from cdt.metrics import SHD, SID
 import matplotlib.pyplot as plt
 import numpy as np
 
-from Code.Light_Switches import light_switches, discovery, interventional_discovery, counterfactual_discovery
+from Code.Light_Switches.No_Loop import light_switches, discovery, interventional_discovery, counterfactual_discovery
 
 
 # Calculates the shd correct edges - incorrect edges / total
@@ -36,7 +36,7 @@ def structural_hamming_distance(label_edges, predicted_edges):
 # ID
 # CD
 def compare_shd():
-    directory = 'Light_Switches/'
+    directory = 'Light_Switches/No_Loop/'
     correct_edges = np.load(path.join(directory, 'light_switches_correct_edges.npy'))
     pc_edges = np.load(path.join(directory, 'light_switches_pc_edges.npy'))
     id_edges = np.load(path.join(directory, 'light_switches_id_edges.npy'))
