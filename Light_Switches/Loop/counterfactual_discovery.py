@@ -8,11 +8,8 @@ from pgmpy.estimators.CITests import chi_square, g_sq
 from pgmpy.base import DAG
 
 
-# Sort by the interventions
-# determine conditional independence on this subset of data
-# compare to PC result
-
-
+# Sort by the interventions in the dataframe
+# find intervention targets
 def load_df_and_find_interventions(filename):
     # cols = ['action', 's0', 's1', 's2', 's3', 's4', 'l0', 'l1', 'l2', 'l3', 'l4']
     # short_cols = ['action', 's0', 's1', 'l0', 'l1']
@@ -128,7 +125,7 @@ def sufficient_causes(variable, df, causes):
                     sufficient_set = cause_set
                     return set(sufficient_set)
 
-    return ()
+    return set()
 
 
 # Check the lights for a set of causes that is both necessary and sufficient

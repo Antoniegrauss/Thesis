@@ -58,8 +58,8 @@ def choose_connection_type(connections_array, choices):
 # Returns the light state depending on the switch states
 # and type of connection (AND, OR ... etc)
 def light_state_from_connection_type(switch_states, connection_type):
-
     # Calculate the amount of switches that are on and how many are off
+    print("switches ", switch_states)
     len_true = np.count_nonzero(switch_states)
     len_false = len(switch_states) - len_true
 
@@ -95,12 +95,15 @@ def light_state_from_connection_type(switch_states, connection_type):
         else:
             # AND can not contain any FALSE
             if connection_type == 'AND':
+                #print("AND ", len_false == 0)
                 return 1 * (len_false == 0)
             # OR has to contain at least one True
             elif connection_type == 'OR':
+                #print("OR", len_true>=1)
                 return 1 * (len_true >= 1)
             # XOR has to contain exactly 1 TRUE value
             elif connection_type == 'XOR':
+                #print("XOR ", len_true==1)
                 return 1 * (len_true == 1)
 
     # If none of these is the case, return -1 for error
@@ -115,43 +118,56 @@ def lights_output(switch_states, connections_array, connection_types):
     # subtracting the row from the switch states should not give any -1 values
     for row, type in zip(connections_array.T, connection_types):
         light_state = light_state_from_connection_type(switch_states[row > 0], type)
-        #print("Light, ", switch_states[row > 0], " type ", type, " state ", light_state)
+        # print("Light, ", switch_states[row > 0], " type ", type, " state ", light_state)
         lights.append(light_state)
 
     return lights
 
 
 # Returns the switch states after flipping a switch (action)
-def switch_states_after_action(action, switches):
-    if switches[action] == 0:
-        switches[action] = 1
-    elif switches[action] == 1:
-        switches[action] = 0
+def switch_states_after_action(action, switch_states):
+    if switch_states[action] == 0:
+        switch_states[action] = 1
+    elif switch_states[action] == 1:
+        switch_states[action] = 0
     else:
         print("Invalid light switch choice")
 
-    return switches
+    return switch_states
 
 
-# loop where the robot chooses an action and result is generated and saved
-# in data save these cols
-def setup_and_run_loop(n_switches, n_lights, light_switches, lights, connections_per_switch,
-                       n_samples, connection_choices):
+# Creates a list holding all the names of the light switches and lights
+# for creating a dataframe
+def get_cols(n_switches, n_lights):
     cols = ['action']
     for s in range(n_switches):
         cols.append("s" + str(s))
     for l in range(n_lights):
         cols.append("l" + str(l))
-    # two_cols = ['action', 's0', 's1', 'l0', 'l1']
-    data = np.zeros(1 + len(light_switches) + len(lights))
-    # Set all the light switches to their initial position
-    switch_states = np.zeros(n_switches).astype(int)
 
+    return cols
+
+
+# Setup the connections and connection choices
+def setup_connections(light_switches, lights, connections_per_switch,
+                      connection_choices):
     # Generate the connection matrix (multiple options)
     connections_array = generate_connections(light_switches, lights, connections_per_switch)
     connection_types = choose_connection_type(connections_array, choices=connection_choices)
     print("Connections are: \n", connections_array)
     print("Connection types are: ", connection_types)
+
+    return connections_array, connection_types
+
+
+# loop where the robot chooses an action and result is generated and saved
+# in data save these cols
+def setup_and_loop_n_times(n_switches, light_switches, lights, connections_array, connection_types,
+                           n_samples, cols):
+    # Create a numpy array for the data
+    data = np.zeros(1 + len(light_switches) + len(lights))
+    # Set all the light switches to their initial position
+    switch_states = np.zeros(n_switches).astype(int)
 
     # Keep the switch states in a deque
     # use the exploration policy
@@ -160,10 +176,10 @@ def setup_and_run_loop(n_switches, n_lights, light_switches, lights, connections
     action = 0
     history_switch_states.append(switch_states)
 
-    generate_data(n_switches, light_switches, switch_states, history_switch_states, cols,
-                  connections_array, connection_types, data, n_samples)
+    data = run_n_times(n_switches, light_switches, switch_states, history_switch_states, cols,
+                       connections_array, connection_types, data, n_samples)
 
-    return connections_array
+    return np.delete(data, 0, 0)
 
 
 def choose_action(n_switches, light_switches, switch_states, history_switch_states):
@@ -195,28 +211,37 @@ def choose_action(n_switches, light_switches, switch_states, history_switch_stat
     return action, future_switch_states
 
 
-# Run the loop, store the data and save the data
-def generate_data(n_switches, light_switches, switch_states, history_switch_states, cols,
-                  connections_array, connection_types, data, n_samples):
-    while True:
+# Run the loop once
+# choose action
+# calculate light states
+def run_once(n_switches, light_switches, switch_states, history_switch_states,
+             connections_array, connection_types):
+    # Choose a new action and calculate the next steps states
+    action, future_switch_states = choose_action(n_switches, light_switches, switch_states, history_switch_states)
+    history_switch_states.append(future_switch_states)
+    switch_states = switch_states_after_action(action, switch_states)
+    print("Action: flipping switch ", action)
 
-        # Choose a new action and calculate the next steps states
-        action, future_switch_states = choose_action(n_switches, light_switches, switch_states, history_switch_states)
-        history_switch_states.append(future_switch_states)
-        switch_states = switch_states_after_action(action, switch_states)
-        print("Action: flipping switch ", action)
+    light_states = np.array(lights_output(switch_states, connections_array, connection_types))
+    new_data = np.insert(np.concatenate((switch_states, light_states)), 0, action)
+    print(new_data)
 
-        light_states = np.array(lights_output(switch_states, connections_array, connection_types))
-        new_data = np.insert(np.concatenate((switch_states, light_states)), 0, action)
-        print(new_data)
+    return new_data
+
+
+# Loop n times (choosing action, calculating light states)
+def run_n_times(n_switches, light_switches, switch_states, history_switch_states, cols,
+                connections_array, connection_types, data, n_samples, save=True):
+    for n in range(n_samples):
+        new_data = run_once(n_switches, light_switches, switch_states, history_switch_states,
+                            connections_array, connection_types)
         data = np.vstack((data, new_data))
 
-        # For delaying the loop while ensuring a certain time per loop
-        # time.sleep(1 - ((time.time() - starttime) % 1))
-        if data.shape[0] > n_samples:
-            np.save('5_light_switches', np.delete(data, 0, 0))
-            pd.DataFrame(np.delete(data, 0, 0), columns=cols).to_csv('five_switches.csv')
-            break
+    if save:
+        np.save('5_light_switches', np.delete(data, 0, 0))
+        pd.DataFrame(np.delete(data, 0, 0), columns=cols).to_csv('five_switches.csv')
+
+    return data
 
 
 # Show the correct graph
@@ -236,18 +261,23 @@ def generate_graph_and_save(light_switches, lights, connections_array,
         # plt.show()
 
 
-def main(n_switches=5, n_lights=5, connections_per_switch=2, n_samples=2000):
-    # Light switches
+# Setup the light connections and loop n times
+def main(n_switches=5, n_lights=5, connections_per_switch=2, n_samples=1000):
+    # Array with all the switches (unique integer)
     light_switches = np.array(range(n_switches))
 
-    # Lights
+    # Array with all the lights (unique integer)
     lights = np.array(range(n_lights))
 
     connection_choices = np.array([['ON', 'OFF'],
                                    ['AND', 'OR', 'XOR', 'NAND', 'NOR', 'NXOR']])
 
-    connections_array = setup_and_run_loop(n_switches, n_lights, light_switches, lights,
-                                           connections_per_switch, n_samples, connection_choices)
+    connections_array, connection_types = setup_connections(light_switches, lights, connections_per_switch,
+                                                            connection_choices)
+    cols = get_cols(n_switches, n_lights)
+
+    data = setup_and_loop_n_times(n_switches, light_switches, lights, connections_array, connection_types,
+                                  n_samples, cols)
 
     generate_graph_and_save(light_switches, lights, connections_array)
 

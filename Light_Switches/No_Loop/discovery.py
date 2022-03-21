@@ -8,7 +8,7 @@ import pandas as pd
 # Run PC algorithm on the df
 # save the result
 # plot the resulting graph
-def run_pc_plot_save(df, save_name='light_switches_pc.npy', save=True, plot=True):
+def run_pc_plot_save(df, save_name='light_switches_pc_edges_npy', save=True, plot=True):
     c = PC(df)
     pdag = c.estimate()
     if save:
@@ -29,7 +29,7 @@ def main():
     five_light_switches = pd.read_csv('five_switches.csv')
     df_switches = five_light_switches
     df_switches = df_switches.drop(["action"], axis=1)
-    run_pc_plot_save(df_switches, save_name='light_switches_pc.npy')
+    run_pc_plot_save(df_switches, save_name='light_switches_pc_edges.npy')
 
 
 if __name__ == '__main__':
