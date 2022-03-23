@@ -5,10 +5,12 @@ import networkx as nx
 import pandas as pd
 from matplotlib import pyplot as plt
 from pgmpy.base import DAG
-
-import data_generator
 import numpy as np
 
+# Own files
+import data_generator
+import sufficiency_refuter
+import metrics
 
 # TODO:
 # Discover causal links from the switches and lights
@@ -71,10 +73,10 @@ def calculate_new_temperature(heating, room_temp, outside_temp):
 # Get new light and switch states
 def new_states(action, switch_states, connections_array, connection_types):
     # Calculate the light states
-    new_switch_states = data_generator.switch_states_after_action(action, switch_states)
-    new_light_states = data_generator.lights_output(new_switch_states, connections_array, connection_types)
+    next_switch_states = data_generator.switch_states_after_action(action, switch_states)
+    next_light_states = data_generator.lights_output(next_switch_states, connections_array, connection_types)
 
-    return new_light_states, new_switch_states
+    return next_light_states, next_switch_states
 
 
 # Returns the difference between the two arrays
@@ -86,6 +88,25 @@ def calculate_changes(old, new):
 def stack_data(data, new_data):
     data = np.vstack((data, new_data.copy()))
     return data
+
+
+# If the new set is a subset of one of the sets in the set_of_sets
+# return the found superset
+def subset_in_set_of_sets(set_of_sets, new_set):
+    for set_x in set_of_sets:
+        if set(new_set).issubset(set(set_x)):
+            return set_x
+    return {}
+
+
+# If the new set is a superset of one of the sets in the set_of_sets
+# returns the found subset
+# can also be the same set
+def superset_in_set_of_sets(set_of_sets, new_set):
+    for set_x in set_of_sets:
+        if set(new_set).issuperset(set(set_x)):
+            return set_x
+    return {}
 
 
 # Combines a new set and a set of sets
@@ -102,19 +123,24 @@ def combine_sufficient_sets(set_of_sets, new_set):
     # Check for empty set
     if set_of_sets == {}:
         return {new_set}
-    for set_x in set_of_sets:
+
+    subset = superset_in_set_of_sets(set_of_sets, new_set)
+    if subset != {}:
         # If there is already a subset
-        if set(set_x).issubset(set(new_set)):
-            print("is superset")
-            return set_of_sets
+        print("is superset")
+        return set_of_sets
+
+    superset = subset_in_set_of_sets(set_of_sets, new_set)
+    if superset != {}:
         # If the new set is a subset of one in the list
         # swap the new set with that entry
-        if set(new_set).issubset(set(set_x)):
-            return_set = {new_set}
-            for x in set_of_sets:
-                return_set.update([x])
-            return_set.remove(set_x)
-            return return_set
+        print("is subset")
+        return_set = {new_set}
+        for x in set_of_sets:
+            return_set.update([x])
+        return_set.remove(superset)
+        return return_set
+
     # If none of the sets are a subset (or the same) as the new set,
     # append it to the list
     return_set = {new_set}
@@ -129,7 +155,7 @@ def combine_sufficient_sets(set_of_sets, new_set):
 # according to the new sample value and the total amount of samples
 # new_sample should be 1 for positive feedback, -1 for negative feedback
 def update_confidence(confidence, new_sample, n_samples, function='square_root'):
-    return confidence + (0.25 * (new_sample / n_samples))
+    return confidence + (new_sample / (2 ** n_samples))
 
 
 # Creates first-order logic formulas
@@ -152,13 +178,10 @@ def generate_fol_sufficient(causes, effect):
 
 # Generates a DAG object
 # and plots it
-def generate_graph_and_plot(switches, lights, connections_array, connection_types, save_name='looped_discovery_edges',
+def generate_graph_and_plot(connections, connection_types, save_name='looped_discovery_edges',
                             save=True, plot=True):
     graph = DAG()
-    for id, switch in enumerate(switches):
-        for idd, light in enumerate(lights):
-            if connections_array[id, idd] == 1:
-                graph.add_edge(u="s" + str(switch), v="l" + str(light))
+    graph.add_edges_from(connections)
     if save:
         np.save(save_name, graph.edges)
     if plot:
@@ -166,6 +189,8 @@ def generate_graph_and_plot(switches, lights, connections_array, connection_type
         plt.title(f"Found links: looped discovery \n {connection_types}")
         nx.draw_circular(graph, with_labels=True, arrowsize=30, node_size=800, alpha=0.5)
         # plt.show()
+
+    return graph
 
 
 # Generates the column indexes for a Pandas Dataframe
@@ -184,7 +209,7 @@ def get_cols(n_switches, n_lights, heating=False):
 
 
 # Choose new action (loop back)
-def main(n_loop=20, plot=True):
+def main(n_loop=100, plot=True):
     # Setup everything
     # Switches
     n_switches = 5
@@ -200,9 +225,9 @@ def main(n_loop=20, plot=True):
 
     # The possible types of connections
     all_choices = np.array([['ON', 'OFF'],
-                                   ['AND', 'OR', 'XOR', 'NAND', 'NOR', 'NXOR']])
-    # Restrict the choices a bit for simplicity
-    connection_choices = np.array([['ON'],
+                            ['AND', 'OR', 'XOR', 'NAND', 'NOR', 'NXOR']])
+    # Option to restrict the choices a bit for simplicity
+    connection_choices = np.array([['ON', 'OFF'],
                                    ['AND', 'OR', 'XOR']])
     connections_array, connection_types, lights, switches = \
         setup_connections(connection_choices,
@@ -214,25 +239,26 @@ def main(n_loop=20, plot=True):
     switch_states = np.zeros(n_switches)
 
     # The light states at the start
-    light_states = np.array(data_generator.lights_output(switch_states, connections_array, connection_types))
+    light_states = data_generator.lights_output(switch_states, connections_array, connection_types)
 
     # Create a numpy array for the data
     data = np.zeros(3 + n_switches + n_lights)
 
     # The connections are stored in an array with 3 columns
     # col 1 = from, col 2 = to, col 3 = confidence
-    connections = ['from', 'to']
+    # ['from', 'to']
+    connections = []
 
     # Gather a list of possible actions
     possible_actions = np.append(switches.copy(), 'heating')
 
     # Necessary is an array between lights and switches
     # each cell holds:
-        # a number between 0 and 1 for the confidence
-        # n_samples to update the confidence
+    # a number between 0 and 1 for the confidence
+    # n_samples to update the confidence
     # that that switch is necessary for that light
     # or in logic  not_switch -> not_light
-    necessary_sets = np.zeros((n_lights, n_switches, 2))
+    link_confidence = np.zeros((n_lights, n_switches, 2))
 
     # Sufficient_sets holds a list of sets (one for each light)
     # a sufficient set will always turn on a light
@@ -252,29 +278,32 @@ def main(n_loop=20, plot=True):
             heating_knob = random.choice(heating_knob_settings)
             heating = heating_knob * 5
             action = 'h' + str(heating_knob)
-            inside_temp = calculate_new_temperature(heating, inside_temp, outside_temp)
+            new_inside_temp = calculate_new_temperature(heating, inside_temp, outside_temp)
 
             new_light_states, new_switch_states = light_states.copy(), switch_states.copy()
+            inside_temp = new_inside_temp
 
         # If we change a switch calculate the new states and do inference on connections
         else:
             action = int(action)
-            new_light_states, new_switch_states = np.array(new_states(action, switch_states,
-                                                                      connections_array, connection_types))
+            new_light_states, new_switch_states = new_states(action, switch_states,
+                                                             connections_array, connection_types)
             print("Switch states: \n", new_switch_states)
             print("Light states: \n", new_light_states)
 
+            # TODO: keep track of whether 'cause' variables change as well
             # Look at the difference with last time step
             switch_changes = calculate_changes(switch_states, new_switch_states)
-            print("Switch changes: \n", switch_changes)
+
+            #print("Switch changes: \n", switch_changes)
             light_changes = calculate_changes(light_states, new_light_states)
-            print("Light changes: \n", light_changes)
+            #print("Light changes: \n", light_changes)
 
             # If there are changes in the lights
-            # update Neccesary and Sufficient set for that light
+            # update Necessary and Sufficient set for that light
             if len(np.unique(light_changes)) > 1:
                 changed_lights = lights[light_changes != 0]
-                print("changed lights", changed_lights)
+                #print("changed lights", changed_lights)
                 for light in changed_lights:
 
                     # TODO: sufficient set only works for ON (so no XOR and such)
@@ -284,19 +313,27 @@ def main(n_loop=20, plot=True):
                     # new_set must be immutable set(set()) is not possible
                     new_set = tuple(switches[switch_states == 1])
                     print("sufficient_sets, ", sufficient_sets)
-                    sufficient_sets[light] = combine_sufficient_sets(sufficient_sets[light], new_set)
+                    if new_set not in sufficient_sets[light]:
+                        # Use the sufficiency refuter before combining
+                        refuted_sufficiency_set = sufficiency_refuter.reduce_sufficiency_set(new_set, light,
+                                                                                             new_light_states.copy(),
+                                                                                             new_switch_states.copy(),
+                                                                                             connections_array,
+                                                                                             connection_types)
+                        sufficient_sets[light] = combine_sufficient_sets(sufficient_sets[light], refuted_sufficiency_set)
+
 
                     # Update the Necessary of the switch that was just flipped
-                    n_samples = necessary_sets[light, action, 1] + 1
-                    confidence = necessary_sets[light, action, 0]
+                    n_samples = link_confidence[light, action, 1] + 1
+                    confidence = link_confidence[light, action, 0]
                     # Update the confidence with '1' as value
                     updated_confidence = update_confidence(confidence, 1, n_samples)
                     print(f"Updated confidence {light}, {action} to {updated_confidence}")
-                    necessary_sets[light, action, :] = [updated_confidence, n_samples]
+                    link_confidence[light, action, :] = [updated_confidence, n_samples]
 
                     # Add this switch, light pair to connections
-                    if ['s' + str(action), 'l' + str(light)] not in connections:
-                        connections.append(['s' + str(action), 'l' + str(light)])
+                    if ('s' + str(action), 'l' + str(light)) not in connections:
+                        connections.append(('s' + str(action), 'l' + str(light)))
 
         # Save the new data in the light and switches array
         light_states = new_light_states.copy()
@@ -315,12 +352,13 @@ def main(n_loop=20, plot=True):
 
     print("connections: \n", connections)
     print("sufficient_sets \n", sufficient_sets)
-    print("necessary_sets \n", necessary_sets[:, :, 0])
-
+    print("link_confidence \n", link_confidence[:, :, 0])
 
     if plot:
-        data_generator.generate_graph_and_save(switches, lights, connections_array)
-        generate_graph_and_plot(switches, lights, connections_array, connection_types)
+        correct_graph = data_generator.generate_graph_and_save(switches, lights, connections_array)
+        predicted_graph = generate_graph_and_plot(connections, connection_types)
+        shd = metrics.structural_hamming_distance(correct_graph.edges, predicted_graph.edges)
+        print("Structural Hamming Distance: ", shd)
         plt.show()
 
 

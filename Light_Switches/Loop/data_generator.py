@@ -59,7 +59,6 @@ def choose_connection_type(connections_array, choices):
 # and type of connection (AND, OR ... etc)
 def light_state_from_connection_type(switch_states, connection_type):
     # Calculate the amount of switches that are on and how many are off
-    print("switches ", switch_states)
     len_true = np.count_nonzero(switch_states)
     len_false = len(switch_states) - len_true
 
@@ -121,7 +120,7 @@ def lights_output(switch_states, connections_array, connection_types):
         # print("Light, ", switch_states[row > 0], " type ", type, " state ", light_state)
         lights.append(light_state)
 
-    return lights
+    return np.array(lights)
 
 
 # Returns the switch states after flipping a switch (action)
@@ -133,7 +132,7 @@ def switch_states_after_action(action, switch_states):
     else:
         print("Invalid light switch choice")
 
-    return switch_states
+    return np.array(switch_states)
 
 
 # Creates a list holding all the names of the light switches and lights
@@ -259,6 +258,8 @@ def generate_graph_and_save(light_switches, lights, connections_array,
         plt.title("Generated causal links")
         nx.draw_circular(graph, with_labels=True, arrowsize=30, node_size=800, alpha=0.5)
         # plt.show()
+
+    return graph
 
 
 # Setup the light connections and loop n times
