@@ -209,7 +209,7 @@ def get_cols(n_switches, n_lights, heating=False):
 
 
 # Choose new action (loop back)
-def main(n_loop=100, plot=True):
+def main(n_loop=50, plot=True):
     # Setup everything
     # Switches
     n_switches = 5
@@ -358,7 +358,7 @@ def main(n_loop=100, plot=True):
         correct_graph = data_generator.generate_graph_and_save(switches, lights, connections_array)
         predicted_graph = generate_graph_and_plot(connections, connection_types)
         shd = metrics.structural_hamming_distance(correct_graph.edges, predicted_graph.edges)
-        print("Structural Hamming Distance: ", shd)
+        print("Normalized Structural Hamming Distance: ", shd)
         plt.show()
 
 
