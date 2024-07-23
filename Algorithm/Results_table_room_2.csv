@@ -1,0 +1,10 @@
+Environment,Fit time,Perfect score,Average error,Missing edges,Average stop (perfect),Average stop imperfect
+2 rooms,1,23/50,0.15,1.5,175,75
+2 rooms,2,19/50,0.18,1.8,163,75
+2 rooms,5,18/50,0.3,3,192,64
+2 rooms,10,16/50,0.28,2.8,190,55
+2 rooms,20,14/50,0.26,2.6,212,74
+2 rooms,50,18/50,0.21,2.1,211,89
+2 rooms,100,30/50,0.18,1.8,279,165
+2 rooms,200,47/50,0.2,2,423,268
+2 rooms,500,50/50,0,0,1001,0

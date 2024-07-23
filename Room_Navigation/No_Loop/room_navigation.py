@@ -137,7 +137,7 @@ def plot_waypoints(waypoints, types, adjacency_matrix_waypoints):
 
 
 # Calls plot_waypoints on all the rooms and plots the robot
-def plot_everything(all_waypoints, all_types, adjacency_matrix_waypoints, room_sizes_split, robot_at):
+def plot_everything(all_waypoints, all_types, adjacency_matrix_waypoints, robot_at):
     plot_waypoints(all_waypoints, all_types, adjacency_matrix_waypoints)
 
     # plot the robot
@@ -184,7 +184,7 @@ while True:
     # Plot the whole thing without blocking execution
     # Clear old plot
     plt.clf()
-    #plot_everything(all_waypoints, all_types, adjacency_matrix_waypoints, room_sizes, robot_at)
+    #plot_everything(all_waypoints, all_types, adjacency_matrix_waypoints, robot_at)
     #plt.show(block=False)
     #plt.pause(0.001)
 

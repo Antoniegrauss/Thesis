@@ -1,0 +1,7 @@
+README.md
+setup.py
+gym_lights.egg-info/PKG-INFO
+gym_lights.egg-info/SOURCES.txt
+gym_lights.egg-info/dependency_links.txt
+gym_lights.egg-info/requires.txt
+gym_lights.egg-info/top_level.txt

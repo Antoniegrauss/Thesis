@@ -218,15 +218,27 @@ def setup_loop():
     return adjacency_matrix_waypoints, history, data, cols, robot_at
 
 
+# Calls plot_waypoints on all the rooms and plots the robot
+def plot_everything(all_waypoints, all_types, adjacency_matrix_waypoints, robot_at):
+    plot_waypoints(all_waypoints, all_types, adjacency_matrix_waypoints)
+
+    # plot the robot
+    plt.scatter(all_waypoints[robot_at][0], all_waypoints[robot_at][1], marker="s", s=200, c="red")
+
+
 # Runs the main method, looping the action -> new data loop n_loop times
 # Can save the data
 def main(n_loop=100, save=True):
     all_waypoints, all_types, room_array, door_array = setup_room_navigation()
     adjacency_matrix_waypoints, history, data, cols, robot_at = setup_loop()
+
+    plt.figure()
+
     for n in range(n_loop):
         history, robot_at, new_data = loop_once(robot_at, history, room_array, all_waypoints, all_types,
                                                 adjacency_matrix_waypoints)
         data = np.vstack((data, new_data))
+
 
     if save:
         save_data(data, cols)

@@ -140,10 +140,17 @@ def generate_fol_sufficient(causes, effect):
 
 # Generates a DAG object
 # and plots it
-def generate_graph_and_plot(connections, save_name='looped_discovery_edges',
+def generate_graph_and_plot(connections, all_types, save_name='looped_discovery_edges',
                             save=True, plot=True):
     graph = DAG()
     graph.add_edges_from(connections)
+    graph_nodes = graph.nodes
+    all_types = np.unique(all_types)
+    if "no_move" not in graph_nodes:
+        graph.add_node("no_move")
+    for type_combi in zip(all_types, all_types):
+        if type_combi not in graph_nodes:
+            graph.add_node(type_combi)
     if save:
         np.save(save_name, graph.edges)
     if plot:
@@ -170,7 +177,7 @@ def get_cols(n_switches, n_lights, heating=False):
 
 
 # Choose new action (loop back)
-def main(n_loop=50, plot=True):
+def main(n_loop=20, plot_graph=True, plot_robot=True):
     # Setup everything
     all_waypoints, all_types, room_array, door_array = room_navigation.setup_room_navigation()
     adjacency_matrix, history, data, cols, robot_at = room_navigation.setup_loop()
@@ -182,6 +189,9 @@ def main(n_loop=50, plot=True):
     # col 1 = from, col 2 = to, col 3 = confidence
     # ['from', 'to']
     connections = []
+
+    if plot_robot:
+        plt.figure()
 
     # Loop the discovery
     for n in range(n_loop + 1):
@@ -211,9 +221,10 @@ def main(n_loop=50, plot=True):
         # If there are changes in states
         # update Necessary and Sufficient set for that state
         if True in state_changes:
-            print(state_changes)
             changed_states = states[state_changes]
             for state in changed_states:
+                if action is None:
+                    action_type_from_to = "no_move"
 
                 # TODO: write for room navigation (necessity and sufficiency)
 
@@ -226,6 +237,15 @@ def main(n_loop=50, plot=True):
 
         if action is not None:
             prev_action = action
+
+
+        # Plot the robot position
+        if plot_robot:
+            plt.clf()
+            room_navigation.plot_everything(all_waypoints, all_types, adjacency_matrix, robot_at)
+            plt.show(block=False)
+            plt.pause(0.001)
+
     df = pd.DataFrame(np.delete(data, 0, 0), columns=cols)
 
     # TODO: Generate the first-order logic formulas
@@ -236,10 +256,10 @@ def main(n_loop=50, plot=True):
     #print("sufficient_sets \n", sufficient_sets)
     #print("link_confidence \n", link_confidence[:, :, 0])
 
-    if plot:
+    if plot_graph:
         # TODO: correct graph?
         # correct_graph = data_generator.generate_graph_and_save(switches, lights, connections_array)
-        predicted_graph = generate_graph_and_plot(connections)
+        predicted_graph = generate_graph_and_plot(connections, all_types)
         # shd = metrics.structural_hamming_distance(correct_graph.edges, predicted_graph.edges)
         # print("Normalized Structural Hamming Distance: ", shd)
         plt.show()
