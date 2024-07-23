@@ -1,7 +1,7 @@
 import random
 from collections import deque
 from pgmpy.estimators import MaximumLikelihoodEstimator
-from Algorithm import metrics
+import metrics
 import networkx as nx
 import numpy as np
 import pandas as pd
