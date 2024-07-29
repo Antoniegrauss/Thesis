@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-first_part_path = "scores_4_rooms_"
+first_part_path = "Result/scores_4_rooms_"
 paths = []
 for i in range(10):
     paths.append(first_part_path + str(i) + ".npy")

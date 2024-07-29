@@ -144,7 +144,7 @@ def generate_data(n_switches, light_switches, switch_states, history_switch_stat
 
 # Show the correct graph
 def generate_graph_and_save(light_switches, lights, connections_array,
-                            save_name='light_switches_correct_edges', save=True, plot=True):
+                            save_name='Data/light_switches_correct_edges', save=True, plot=True):
     graph = DAG()
     for id, switch in enumerate(light_switches):
         for idd, light in enumerate(lights):

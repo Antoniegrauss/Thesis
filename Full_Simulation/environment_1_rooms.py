@@ -1,6 +1,6 @@
 import copy
 
-from Algorithm import classes
+import classes
 
 ##### Room A
 # Switches and lights

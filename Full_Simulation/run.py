@@ -150,4 +150,4 @@ def save_data(environment_1, reasoner_1, robot_1):
     #df_data = df_data[df_data != -1]
     print(intervention_targets_4_rooms)
     df = pd.DataFrame(df_data, columns=np.append(reasoner_1.last_observed_sensor_history[0, 1:], ["action"]))
-    df.to_csv("Dataset_4_rooms_300_samples.csv", index=False)
+    df.to_csv("Result/Dataset_4_rooms_300_samples.csv", index=False)

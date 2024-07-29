@@ -7,8 +7,8 @@ paths = []
 for i in range(10):
     paths.append(first_part_path + str(i) + ".npy")"""
 
-room_2_res = pd.read_csv("Results_table_room_2.csv").to_numpy()
-room_4_res = pd.read_csv("Results_table_room_4.csv").to_numpy()
+room_2_res = pd.read_csv("Result/Results_table_room_2.csv").to_numpy()
+room_4_res = pd.read_csv("Result/Results_table_room_4.csv").to_numpy()
 print(room_2_res)
 print(room_4_res)
 
