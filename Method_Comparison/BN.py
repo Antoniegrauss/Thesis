@@ -7,7 +7,7 @@ import numpy as np
 # Plots CPD (Conditional Probability Densities) for a Bayesion network.
 # The nodes and edges are predetermined, the weights (CPD's) are fitted from a matrix
 
-data_int = np.load('Light_Switches/Method_Comparison/int_data.npy')
+data_int = np.load('Method_Comparison/Data/int_data.npy')
 
 '''
 # Fit the pdag to a DBN

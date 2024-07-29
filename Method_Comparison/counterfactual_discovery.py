@@ -164,7 +164,7 @@ def discovery_with_counterfactual_inference(df, intervention_targets, connection
 
 
 # Generates a DAG from a connections array (tuples)
-def generate_graph_from_connections_save_plot(connections, save_name='light_switches_cf_edges', save=True, plot=True):
+def generate_graph_from_connections_save_plot(connections, save_name='Result/light_switches_cf_edges', save=True, plot=True):
     # Set up a DAG from the found dependency relations
     graph = DAG(ebunch=connections)
     # for connection in connections:
@@ -182,7 +182,7 @@ def generate_graph_from_connections_save_plot(connections, save_name='light_swit
 
 
 def main():
-    filename = 'five_switches.csv'
+    filename = 'Data/five_switches.csv'
 
     intervention_targets, df_switches = load_df_and_find_interventions(filename)
 

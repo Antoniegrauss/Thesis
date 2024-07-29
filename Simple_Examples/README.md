@@ -1,4 +1,12 @@
-# Room Navigation
+# Examples
+
+Contains 2 simple examples for HBCD.
+
+## Switch Discovery
+
+The algorithm has to discover causal links between lights and switches.
+
+## Room Navigation
 
 Moving through a room, where each waypoint has a tag:
 

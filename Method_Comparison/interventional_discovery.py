@@ -124,7 +124,7 @@ def generate_light_light_connections(connections, df, intervention_targets, amou
 
 
 # Generates a DAG from a connections array (tuples)
-def generate_graph_from_connections_save_plot(connections, save_name='light_switches_id_edges',
+def generate_graph_from_connections_save_plot(connections, save_name='Result/light_switches_id_edges',
                                               save=True, plot=True):
     # Set up a DAG from the found dependency relations
     graph = DAG(ebunch=connections)
@@ -144,7 +144,7 @@ def generate_graph_from_connections_save_plot(connections, save_name='light_swit
 
 def main():
     connections = []
-    df_split, df, intervention_targets = prepare_intervention_data('five_switches.csv')
+    df_split, df, intervention_targets = prepare_intervention_data('Data/five_switches.csv')
     connections = find_switch_light_connections(df_split, connections)
     connections = find_switch_light_connections(df_split, connections)
     graph = generate_graph_from_connections_save_plot(connections)

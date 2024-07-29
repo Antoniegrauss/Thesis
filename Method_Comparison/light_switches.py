@@ -3,7 +3,6 @@ from collections import deque
 import networkx as nx
 import numpy as np
 import random
-import time
 import pandas as pd
 
 # For comparability choose a seed
@@ -138,8 +137,8 @@ def generate_data(n_switches, light_switches, switch_states, history_switch_stat
         # For delaying the loop while ensuring a certain time per loop
         # time.sleep(1 - ((time.time() - starttime) % 1))
         if data.shape[0] > n_samples:
-            np.save('5_light_switches', np.delete(data, 0, 0))
-            pd.DataFrame(np.delete(data, 0, 0), columns=cols).to_csv('five_switches.csv')
+            np.save('Data/5_light_switches', np.delete(data, 0, 0))
+            pd.DataFrame(np.delete(data, 0, 0), columns=cols).to_csv('Data/five_switches.csv')
             break
 
 

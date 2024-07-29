@@ -1,4 +1,3 @@
-import os
 from os import path
 
 import matplotlib.pyplot as plt
@@ -35,11 +34,11 @@ def structural_hamming_distance(label_edges, predicted_edges):
 # ID
 # CD
 def compare_shd():
-    directory = 'Light_Switches/Method_Comparison/'
-    correct_edges = np.load(path.join(directory, 'light_switches_correct_edges.npy'))
-    pc_edges = np.load(path.join(directory, 'light_switches_pc_edges.npy'))
-    id_edges = np.load(path.join(directory, 'light_switches_id_edges.npy'))
-    cf_edges = np.load(path.join(directory, 'light_switches_cf_edges.npy'))
+    directory = 'Method_Comparison'
+    correct_edges = np.load(path.join('Data', 'light_switches_correct_edges.npy'))
+    pc_edges = np.load(path.join('Result', 'light_switches_pc_edges.npy'))
+    id_edges = np.load(path.join('Result', 'light_switches_id_edges.npy'))
+    cf_edges = np.load(path.join('Result', 'light_switches_cf_edges.npy'))
     print("Normalized SHD with PC is (0=best, 1=worst): \n",
           structural_hamming_distance(correct_edges, predicted_edges=pc_edges))
     print("Normalized SHD distance with ID is (0=best, 1=worst): \n",
