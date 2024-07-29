@@ -1,7 +1,6 @@
 import random
 from collections import deque
 from pgmpy.estimators import MaximumLikelihoodEstimator
-import metrics
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -10,6 +9,25 @@ from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from pgmpy.base import DAG
 from pgmpy.models import BayesianNetwork
 
+import sys
+import os
+ 
+# getting the name of the directory
+# where the this file is present.
+current = os.path.dirname(os.path.realpath(__file__))
+ 
+# Getting the parent directory name
+# where the current directory is present.
+parent = os.path.dirname(current)
+ 
+# adding the parent directory to 
+# the sys.path.
+sys.path.append(parent)
+ 
+# now we can import the module in the parent
+# directory.
+
+from Common import metrics
 
 class Robot:
 

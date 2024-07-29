@@ -1,4 +1,3 @@
-import math
 import random
 
 import networkx as nx
@@ -9,9 +8,6 @@ import numpy as np
 
 # Own files
 import room_navigation
-import sufficiency_refuter
-import metrics
-
 
 # Find necessary and sufficient causes for the room navigation case
 # Actions are moving to a certain waypoint

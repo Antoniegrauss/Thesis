@@ -8,9 +8,27 @@ from pgmpy.base import DAG
 import numpy as np
 
 # Own files
-import data_generator
-import sufficiency_refuter
-import metrics
+import sys
+import os
+ 
+# getting the name of the directory
+# where the this file is present.
+current = os.path.dirname(os.path.realpath(__file__))
+ 
+# Getting the parent directory name
+# where the current directory is present.
+parent = os.path.dirname(current)
+ 
+# adding the parent directory to 
+# the sys.path.
+sys.path.append(parent)
+ 
+# now we can import the module in the parent
+# directory.
+
+from Common.sufficiency_refuter import reduce_sufficiency_set
+from Common import metrics
+from Common import data_generator
 
 # TODO:
 # Discover causal links from the switches and lights
@@ -315,11 +333,12 @@ def main(n_loop=50, plot=True):
                     print("sufficient_sets, ", sufficient_sets)
                     if new_set not in sufficient_sets[light]:
                         # Use the sufficiency refuter before combining
-                        refuted_sufficiency_set = sufficiency_refuter.reduce_sufficiency_set(new_set, light,
-                                                                                             new_light_states.copy(),
-                                                                                             new_switch_states.copy(),
-                                                                                             connections_array,
-                                                                                             connection_types)
+                        refuted_sufficiency_set = reduce_sufficiency_set(new_set, light,
+                                                                        new_light_states.copy(),
+                                                                        new_switch_states.copy(),
+                                                                        connections_array,
+                                                                        connection_types,
+                                                                        new_states)
                         sufficient_sets[light] = combine_sufficient_sets(sufficient_sets[light], refuted_sufficiency_set)
 
 
