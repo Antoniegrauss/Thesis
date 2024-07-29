@@ -527,13 +527,14 @@ class Reasoner:
             else:
                 new_action = "None"
 
-            iterator = zip(self.last_observed_sensor_history[:, cols], self.action_history[1:, :])
+            iterator = zip(self.last_observed_sensor_history[:, cols], 
+                           self.action_history[1:, :])
 
             occurrences = 0
             for row, action_row in iterator:
                 # Evaluate without the first column (time is unique per row)
                 eval_row = np.all(row[1:] == new_state[1:])
-                eval_action = np.all(action_row[1:] == new_action)
+                eval_action = np.all(action_row[1:] == np.array(new_action, dtype=object))
                 if eval_row and eval_action:
                     occurrences += 1
                     # return occurrences
