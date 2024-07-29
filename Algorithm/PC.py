@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 from pgmpy.estimators import PC
 import pandas as pd
 
-from Code.Algorithm import metrics
+import metrics
 
 
 def calculate_pc(df, correct_graph):
