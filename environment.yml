@@ -1,0 +1,4 @@
+name: causal_discovery
+channels:
+  - conda-forge
+prefix: /home/nope/miniforge3/envs/causal_discovery
